@@ -1,0 +1,6 @@
+{
+  "name": "DeadlineAI",
+  "description": "The AI Productivity Agent that helps users complete work instead of simply reminding them.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
