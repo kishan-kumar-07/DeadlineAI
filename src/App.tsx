@@ -24,13 +24,15 @@ import {
   TrendingUp,
   Sliders,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  Menu
 } from "lucide-react";
 import Sidebar from "./components/Sidebar";
 import FocusTimer from "./components/FocusTimer";
 import AICoachChat from "./components/AICoachChat";
 import TaskForm from "./components/TaskForm";
 import AnalyticsCharts from "./components/AnalyticsCharts";
+import TaskCelebration from "./components/TaskCelebration";
 import { Task, Habit, Goal, SystemNotification, ChatMessage, UserSettings, AppState } from "./types";
 
 export default function App() {
@@ -60,6 +62,7 @@ export default function App() {
 
   // Navigation and UI controls
   const [activeTab, setActiveTab] = useState("dashboard");
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeAgentName, setActiveAgentName] = useState<string | undefined>(undefined);
   const [showTaskForm, setShowTaskForm] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | undefined>(undefined);
@@ -76,6 +79,9 @@ export default function App() {
 
   // Pomodoro/Statistics state
   const [focusStreak, setFocusStreak] = useState(0);
+
+  // Celebration state for completed tasks
+  const [celebratingTask, setCelebratingTask] = useState<string | null>(null);
 
   // Load app state from Server DB on startup
   useEffect(() => {
@@ -251,6 +257,9 @@ export default function App() {
     const updated = tasks.map(t => {
       if (t.id === taskId) {
         const completed = !t.completed;
+        if (completed) {
+          setCelebratingTask(t.title);
+        }
         return {
           ...t,
           completed,
@@ -271,6 +280,10 @@ export default function App() {
       if (t.id === taskId) {
         const updatedSub = t.subtasks.map(st => st.id === subtaskId ? { ...st, completed: !st.completed } : st);
         const allCompleted = updatedSub.length > 0 && updatedSub.every(s => s.completed);
+        const originallyCompleted = t.completed;
+        if (allCompleted && !originallyCompleted) {
+          setCelebratingTask(t.title);
+        }
         return {
           ...t,
           subtasks: updatedSub,
@@ -616,21 +629,42 @@ export default function App() {
         
         // 2. MAIN APPLICATION WORKSPACE (AUTHENTICATED)
         <>
+          {/* Backdrop Overlay for Mobile Screen Widths */}
+          {isSidebarOpen && (
+            <div 
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-all duration-300"
+              onClick={() => setIsSidebarOpen(false)}
+            />
+          )}
+
           {/* Navigation Sidebar */}
           <Sidebar 
             activeTab={activeTab} 
-            setActiveTab={setActiveTab} 
+            setActiveTab={(tab) => {
+              setActiveTab(tab);
+              setIsSidebarOpen(false); // Close sidebar on mobile once a tab is tapped
+            }} 
             settings={settings} 
             activeAgentName={activeAgentName}
             logout={handleLogout}
+            isOpen={isSidebarOpen}
+            onClose={() => setIsSidebarOpen(false)}
           />
 
           {/* Dashboard Canvas */}
-          <main id="app-workspace" className="flex-1 h-screen overflow-y-auto bg-[#0A0A0B] p-8 space-y-6">
+          <main id="app-workspace" className="flex-1 h-screen overflow-y-auto bg-[#0A0A0B] p-4 md:p-8 space-y-6">
             
             {/* HEADER METRICS BAR */}
             <div id="header-metrics" className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-white/5">
-              <div>
+              <div className="flex items-center gap-3">
+                {/* Mobile Menu Toggle */}
+                <button
+                  onClick={() => setIsSidebarOpen(true)}
+                  className="md:hidden p-2 -ml-2 text-white/70 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer flex items-center justify-center"
+                  title="Open Navigation"
+                >
+                  <Menu className="w-5 h-5" />
+                </button>
                 <h2 className="font-display font-semibold text-xl text-white tracking-tight mt-1">
                   Productivity Dashboard
                 </h2>
@@ -1314,6 +1348,12 @@ export default function App() {
           isSaving={isSavingTask}
         />
       )}
+
+      {/* Task Completion Celebration */}
+      <TaskCelebration 
+        taskTitle={celebratingTask} 
+        onComplete={() => setCelebratingTask(null)} 
+      />
 
     </div>
   );

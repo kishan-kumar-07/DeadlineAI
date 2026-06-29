@@ -9,7 +9,8 @@ import {
   Clock, 
   Sparkles,
   Zap,
-  Activity
+  Activity,
+  X
 } from "lucide-react";
 import { UserSettings } from "../types";
 
@@ -19,9 +20,19 @@ interface SidebarProps {
   settings: UserSettings;
   activeAgentName?: string;
   logout: () => void;
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
-export default function Sidebar({ activeTab, setActiveTab, settings, activeAgentName, logout }: SidebarProps) {
+export default function Sidebar({ 
+  activeTab, 
+  setActiveTab, 
+  settings, 
+  activeAgentName, 
+  logout, 
+  isOpen = false, 
+  onClose 
+}: SidebarProps) {
   const menuItems = [
     { id: "dashboard", label: "Dashboard", icon: LayoutDashboard },
     { id: "tasks", label: "Task Hub", icon: CheckSquare },
@@ -33,21 +44,37 @@ export default function Sidebar({ activeTab, setActiveTab, settings, activeAgent
   ];
 
   return (
-    <aside id="sidebar-container" className="w-64 lg:w-72 h-screen bg-[#0F0F12] border-r border-white/10 p-5 flex flex-col justify-between sticky top-0">
+    <aside 
+      id="sidebar-container" 
+      className={`fixed inset-y-0 left-0 z-50 w-64 lg:w-72 h-screen bg-[#0F0F12] border-r border-white/10 p-5 flex flex-col justify-between transition-transform duration-300 ease-in-out md:static md:translate-x-0 ${
+        isOpen ? "translate-x-0" : "-translate-x-full"
+      }`}
+    >
       <div>
         {/* Brand logo */}
-        <div id="brand-logo" className="flex items-center gap-3 mb-8 px-1">
-          <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
-            <Zap className="w-4.5 h-4.5 text-white fill-white/10" />
+        <div id="brand-logo" className="flex items-center justify-between mb-8 px-1">
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-lg bg-indigo-600 flex items-center justify-center shadow-lg shadow-indigo-600/20">
+              <Zap className="w-4.5 h-4.5 text-white fill-white/10" />
+            </div>
+            <div>
+              <h1 className="font-display font-semibold text-lg tracking-tight text-white">
+                DeadlineAI
+              </h1>
+              <span className="text-[9px] font-mono text-indigo-400 uppercase tracking-widest font-bold flex items-center gap-1 mt-0.5">
+                <Activity className="w-2.5 h-2.5 animate-pulse" /> AI Core v2.5
+              </span>
+            </div>
           </div>
-          <div>
-            <h1 className="font-display font-semibold text-lg tracking-tight text-white">
-              DeadlineAI
-            </h1>
-            <span className="text-[9px] font-mono text-indigo-400 uppercase tracking-widest font-bold flex items-center gap-1 mt-0.5">
-              <Activity className="w-2.5 h-2.5 animate-pulse" /> AI Core v2.5
-            </span>
-          </div>
+          
+          {/* Close button for mobile screen widths */}
+          <button
+            onClick={onClose}
+            className="md:hidden p-1.5 text-white/50 hover:text-white hover:bg-white/5 rounded-lg transition-colors cursor-pointer"
+            title="Close sidebar"
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Navigation Items */}
